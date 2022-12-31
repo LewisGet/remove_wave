@@ -48,7 +48,7 @@ def split_audio_by_noise(audio, noise_samples, segment_length, output_dir):
     
     for i in range(0, len(audio), segment_length):
         start_time = i * segment_length
-        end_time = start_time + segment_length
+        end_time = start_time + (segment_length * 2)
         segment = audio[start_time:end_time]
         match_format = audio_format_array(segment)
 
