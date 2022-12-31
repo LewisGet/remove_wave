@@ -64,6 +64,13 @@ def split_audio_by_noise(audio, noise_samples, segment_length, output_dir):
             segment.export(os.path.join(output_dir, "clean", "segment_{}.wav".format(i)), format="wav")
 
 
+def add_silent(audio):
+    # 0.1 seconds in milliseconds
+    pause_duration = 0.1 * 1000
+    pause = AudioSegment.silent(duration=pause_duration)
+
+    return audio + pause
+
 audio = AudioSegment.from_file("test.wav")
 
 segment_length = None
@@ -71,7 +78,7 @@ noise_samples = []
 
 for i in glob.glob(os.path.join(".", noise_folder, "*.wav")):
     noise_data = audio_format(AudioSegment.from_file(i))
-    noise_samples.append(noise_data)
+    noise_samples.append(add_silent(noise_data))
 
     size = len(noise_data)
 
