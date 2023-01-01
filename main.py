@@ -47,6 +47,9 @@ def array_to_audio_segment(array, sample_rate=44100, sample_width=2):
     if not isinstance(array, np.ndarray):
         array = np.array(array)
 
+    if array.shape[0] == 0:
+        return AudioSegment.silent(duration=1)
+
     # Add a channel dimension if the array is one-dimensional
     if array.ndim == 1:
         array = array[:, np.newaxis]
@@ -102,7 +105,7 @@ def split_audio_by_noise(audio, output_dir):
     for i in range(0, len(audio_data), segment_length):
         start_time = i * segment_length
         end_time = start_time + segment_length
-        segment = audio[start_time:end_time]
+        segment = audio_data[start_time:end_time]
 
         noise_present = False
         for noise in noise_samples:
