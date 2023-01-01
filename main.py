@@ -41,6 +41,31 @@ def audio_format(audio):
 def audio_format_array(audio):
     return audio_format(audio).get_array_of_samples()
 
+def array_to_audio_segment(array, sample_rate=44100, sample_width=2):
+    # Convert the array to a NumPy array if necessary
+    if not isinstance(array, np.ndarray):
+        array = np.array(array)
+
+    # Add a channel dimension if the array is one-dimensional
+    if array.ndim == 1:
+        array = array[:, np.newaxis]
+
+    # Normalize the array values to the range [-1, 1]
+    array = array / np.max(np.abs(array))
+
+    # Convert the array to a bytes object
+    array = (array * 2**15).astype(np.int16)
+    audio_bytes = array.tobytes()
+
+    # Create the AudioSegment object
+    audio_segment = AudioSegment(
+        audio_bytes, 
+        frame_rate=sample_rate, 
+        sample_width=sample_width,
+        channels=array.shape[1]
+    )
+
+    return audio_segment
 def split_audio_by_noise(audio, noise_samples, segment_length, output_dir):
     # Create output directories if they don't already exist
     if not os.path.exists(output_dir + "/noise"):
