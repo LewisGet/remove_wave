@@ -8,6 +8,7 @@ import glob
 sampling_rate = 48000
 output_dir = "split_audio"
 noise_folder = "sample"
+only_export_full_version = True
 
 def calculate_similarity(wave1, wave2):
     wave1 = np.array(wave1)
@@ -74,50 +75,53 @@ def add_silent(audio):
 
     return audio + pause
 
-def split_audio_by_noise(audio, noise_samples, segment_length, output_dir):
+def split_audio_by_noise(audio, output_dir):
     # Create output directories if they don't already exist
     if not os.path.exists(output_dir + "/noise"):
         os.makedirs(output_dir + "/noise")
     if not os.path.exists(output_dir + "/clean"):
         os.makedirs(output_dir + "/clean")
-    match_noise_samples = []
 
-    for noise in noise_samples:
-        match_noise_samples.append(audio_format_array(noise))
-    
-    for i in range(0, len(audio), segment_length):
-        start_time = i * segment_length
-        end_time = start_time + (segment_length * 2)
-        segment = audio[start_time:end_time]
-        match_format = audio_format_array(segment)
+    new_audio = AudioSegment.silent(duration=1)
 
-        noise_present = False
-        for noise in match_noise_samples:
-            if calculate_similarity(match_format, noise) > 0.8:
-                noise_present = True
-                break
-        
-        if noise_present:
-            segment.export(os.path.join(output_dir, "noise", "segment_{}.wav".format(i)), format="wav")
-        else:
-            segment.export(os.path.join(output_dir, "clean", "segment_{}.wav".format(i)), format="wav")
+    segment_length = None
+    noise_samples = []
+    audio_data = audio_format_array(audio)
 
+    for i in glob.glob(os.path.join(".", noise_folder, "*.wav")):
+        noise_data = audio_format(AudioSegment.from_file(i))
+        noise_data = add_silent(noise_data)
+        noise_data = audio_format_array(noise_data)
+        noise_samples.append(noise_data)
 
-
-
-audio = AudioSegment.from_file("test.wav")
-
-segment_length = None
-noise_samples = []
-
-for i in glob.glob(os.path.join(".", noise_folder, "*.wav")):
-    noise_data = audio_format(AudioSegment.from_file(i))
-    noise_samples.append(add_silent(noise_data))
-
-    size = len(noise_data)
+        size = len(noise_data)
 
     if segment_length is None or size < segment_length:
         segment_length = size
 
-segment_length = int(segment_length // 2)
-split_audio_by_noise(audio, noise_samples, segment_length, output_dir)
+    for i in range(0, len(audio_data), segment_length):
+        start_time = i * segment_length
+        end_time = start_time + segment_length
+        segment = audio[start_time:end_time]
+
+        noise_present = False
+        for noise in noise_samples:
+            if calculate_similarity(segment, noise) > 0.8:
+                noise_present = True
+                break
+
+        segment = array_to_audio_segment(segment, audio.frame_rate, audio.sample_width)
+
+        if not only_export_full_version:
+            if noise_present:
+                segment.export(os.path.join(output_dir, "noise", "segment_{}.wav".format(i)), format="wav")
+            else:
+                segment.export(os.path.join(output_dir, "clean", "segment_{}.wav".format(i)), format="wav")
+
+        if not noise_present:
+            new_audio = new_audio + audio[start_time:start_time + segment_length]
+
+    new_audio.export(os.path.join(output_dir, "clean", "clean_version.wav".format(i)), format="wav")
+
+audio = AudioSegment.from_file("test.wav")
+split_audio_by_noise(audio, output_dir)
