@@ -18,8 +18,14 @@ def calculate_similarity(wave1, wave2):
 
     length = min(len1, len2)
 
-    fft1 = fft(wave1[:length])
-    fft2 = fft(wave2[:length])
+    try:
+        fft1 = fft(wave1[:length])
+        fft2 = fft(wave2[:length])
+    except Exception as e:
+        print(e)
+        return 0
+
+    print("fft working")
 
     correlation = np.corrcoef(fft1, fft2)[0][1]
 
