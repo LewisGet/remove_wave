@@ -66,6 +66,14 @@ def array_to_audio_segment(array, sample_rate=44100, sample_width=2):
     )
 
     return audio_segment
+
+def add_silent(audio):
+    # 0.1 seconds in milliseconds
+    pause_duration = 0.3 * 1000
+    pause = AudioSegment.silent(duration=pause_duration)
+
+    return audio + pause
+
 def split_audio_by_noise(audio, noise_samples, segment_length, output_dir):
     # Create output directories if they don't already exist
     if not os.path.exists(output_dir + "/noise"):
@@ -95,12 +103,7 @@ def split_audio_by_noise(audio, noise_samples, segment_length, output_dir):
             segment.export(os.path.join(output_dir, "clean", "segment_{}.wav".format(i)), format="wav")
 
 
-def add_silent(audio):
-    # 0.1 seconds in milliseconds
-    pause_duration = 0.1 * 1000
-    pause = AudioSegment.silent(duration=pause_duration)
 
-    return audio + pause
 
 audio = AudioSegment.from_file("test.wav")
 
