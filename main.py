@@ -19,6 +19,9 @@ def calculate_similarity(wave1, wave2):
 
     length = min(len1, len2)
 
+    if length is 0:
+        return 0
+
     try:
         fft1 = fft(wave1[:length])
         fft2 = fft(wave2[:length])
