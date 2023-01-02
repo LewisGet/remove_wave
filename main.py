@@ -106,8 +106,8 @@ def split_audio_by_noise(audio, output_dir):
         segment_length = size
 
     for i in range(0, len(audio_data), segment_length):
-        start_time = i * segment_length
-        end_time = start_time + segment_length
+        start_time = i
+        end_time = start_time + segment_length - 1
         segment = audio_data[start_time:end_time]
 
         noise_present = False
