@@ -64,6 +64,13 @@ def split_audio_by_noise(target_audio_path, output_dir):
 
         size = len(noise_data)
 
+        offset_noise_shape = list(noise_data.shape)
+        offset_noise_shape[-1] = int(offset_noise_shape[-1] // 2)
+        offset_noise_data = np.array(np.zeros(offset_noise_shape)).tolist()
+        offset_noise_data = list(offset_noise_data + noise_data.tolist())
+        
+        noise_samples.append(offset_noise_data)
+
         if segment_length is None or size < segment_length:
             segment_length = size
 
