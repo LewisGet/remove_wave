@@ -13,21 +13,14 @@ cache_folder = "cache"
 rebuild_cache = False
 only_export_full_version = False
 
-def calculate_similarity(wave1, wave2):
+def calculate_similarity(wave1, fft2):
     wave1 = np.array(wave1)
-    wave2 = np.array(wave2)
 
-    len1 = len(wave1)
-    len2 = len(wave2)
-
-    length = min(len1, len2)
-
-    if length is 0:
+    if len(wave1) is 0:
         return 0
 
     try:
-        fft1 = fft(wave1[:length])
-        fft2 = fft(wave2[:length])
+        fft1 = fft(wave1)
     except Exception as e:
         print(e)
         return 0
@@ -55,52 +48,53 @@ def split_audio_by_noise(target_audio_path, output_dir):
 
     new_audio = []
     noise_samples = []
-    segment_length = None
+    noise_len = []
     audio_data, _ = load_wav(os.path.join(cache_folder, target_audio_path))
 
     for i in glob.glob(os.path.join(".", cache_folder, noise_folder, "*.wav")):
         noise_data, _ = load_wav(i)
-        noise_samples.append(noise_data)
 
-        size = len(noise_data)
+        if len(noise_data) == 0:
+            continue
 
-        offset_noise_shape = list(noise_data.shape)
-        offset_noise_shape[-1] = int(offset_noise_shape[-1] // 2)
-        offset_noise_data = np.array(np.zeros(offset_noise_shape)).tolist()
-        offset_noise_data = list(offset_noise_data + noise_data.tolist())
-        
-        noise_samples.append(offset_noise_data)
+        noise_fft = fft(np.array(noise_data))
+        noise_len.append(len(noise_data))
+        noise_samples.append(noise_fft)
 
-        if segment_length is None or size < segment_length:
-            segment_length = size
+    total_execute_times = len(audio_data)
 
-    for i in range(0, len(audio_data), segment_length):
-        start_time = i
-        end_time = start_time + segment_length
-        segment = audio_data[start_time:end_time]
+    i = 0
+    while i < total_execute_times:
+        print("update:", i, "/", total_execute_times)
+        print("process %d" % int(i//(total_execute_times/100) + 1))
 
+        match_length = 0
         noise_present = False
-        for noise in noise_samples:
-            if calculate_similarity(segment, noise) > 0.8:
+        for noise, noise_length in zip(noise_samples, noise_len):
+            start_time, end_time = i, i + noise_length
+            audio_sample = audio_data[start_time:end_time]
+
+            if calculate_similarity(audio_sample, noise) > 0.8:
+                match_length = noise_present
                 noise_present = True
                 break
 
-        if not only_export_full_version:
-            if noise_present:
-                write_wav(os.path.join(output_dir, "noise", "segment_{}.wav".format(i)), segment)
-            else:
-                write_wav(os.path.join(output_dir, "clean", "segment_{}.wav".format(i)), segment)
+        if noise_present:
+            i += match_length
+        else:
+            clean_segment = audio_data[i:i+1]
 
-        if not noise_present:
-            if isinstance(segment, np.ndarray):
-                segment = segment.tolist()
+            if isinstance(clean_segment, np.ndarray):
+                clean_segment = clean_segment.tolist()
 
             if isinstance(new_audio, np.ndarray):
                 new_audio = new_audio.tolist()
 
-            new_audio = new_audio + segment
+            new_audio = new_audio + clean_segment
+
+            i += 1
     
-    write_wav(os.path.join(output_dir, "clean", "clean_version.wav"), new_audio)
+    write_wav(os.path.join(output_dir, "clean", output_name), new_audio)
 
 def load_wav(path):
     return librosa.load(path, sr=None)
