@@ -39,7 +39,7 @@ def audio_format(audio):
 def audio_format_array(audio):
     return audio_format(audio).get_array_of_samples()
 
-def split_audio_by_noise(target_audio_path, output_dir):
+def split_audio_by_noise(target_audio_path, output_dir, output_name="clean_version.wav"):
     # Create output directories if they don't already exist
     if not os.path.exists(output_dir + "/noise"):
         os.makedirs(output_dir + "/noise")
@@ -123,10 +123,11 @@ def build_cache(target_path):
 
     audio_format(audio).export(new_path, format="wav")
 
-target_audio_path = "test.wav"
+if __name__ == "__main__":
+    target_audio_path = "unpreprocess.wav"
 
-if rebuild_cache:
-    for i in glob.glob(os.path.join(".", noise_folder, "*.wav")) + [target_audio_path]:
-        build_cache(i)
+    if rebuild_cache:
+        for i in glob.glob(os.path.join(".", noise_folder, "*.wav")) + [target_audio_path]:
+            build_cache(i)
 
-split_audio_by_noise(target_audio_path, output_dir)
+    split_audio_by_noise(target_audio_path, output_dir)
