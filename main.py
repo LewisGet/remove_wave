@@ -75,7 +75,7 @@ def split_audio_by_noise(target_audio_path, output_dir, output_name="clean_versi
             audio_sample = audio_data[start_time:end_time]
 
             if calculate_similarity(audio_sample, noise) > 0.8:
-                match_length = noise_present
+                match_length = noise_length
                 noise_present = True
                 break
 
