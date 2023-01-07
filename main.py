@@ -50,6 +50,7 @@ def split_audio_by_noise(target_audio_path, output_dir, output_name="clean_versi
     new_audio = []
     noise_samples = []
     noise_len = []
+    remove_count = 0
     audio_data, _ = load_wav(os.path.join(cache_folder, target_audio_path))
     np_audio_data = np.array(audio_data)
 
@@ -69,6 +70,7 @@ def split_audio_by_noise(target_audio_path, output_dir, output_name="clean_versi
     while i < total_execute_times:
         print("update:", i, "/", total_execute_times)
         print("process %d" % int(i//(total_execute_times/100) + 1))
+        print("remove count %d" % remove_count)
 
         match_length = 0
         noise_present = False
@@ -79,6 +81,7 @@ def split_audio_by_noise(target_audio_path, output_dir, output_name="clean_versi
             if calculate_similarity(audio_sample, noise) > 0.8:
                 match_length = noise_length
                 noise_present = True
+                remove_count += 1
                 break
 
         if noise_present:
