@@ -12,6 +12,7 @@ noise_folder = "sample"
 cache_folder = "cache"
 rebuild_cache = False
 only_export_full_version = False
+step_size = 480
 
 def calculate_similarity(wave1, fft2):
     wave1 = np.array(wave1)
@@ -83,7 +84,7 @@ def split_audio_by_noise(target_audio_path, output_dir, output_name="clean_versi
         if noise_present:
             i += match_length
         else:
-            clean_segment = audio_data[i:i+1]
+            clean_segment = audio_data[i:i+step_size]
 
             if isinstance(clean_segment, np.ndarray):
                 clean_segment = clean_segment.tolist()
@@ -93,7 +94,7 @@ def split_audio_by_noise(target_audio_path, output_dir, output_name="clean_versi
 
             new_audio = new_audio + clean_segment
 
-            i += 1
+            i += step_size
     
     write_wav(os.path.join(output_dir, "clean", output_name), new_audio)
 
